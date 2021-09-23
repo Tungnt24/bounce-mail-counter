@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	bouncemailcounter "github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,10 +16,10 @@ var client_instance *mongo.Client
 var client_instance_error error
 var mongoOnce sync.Once
 
-const (
-	CONNECTIONSTRING = ""
-	DB               = ""
-	MailLogs         = ""
+var (
+	CONNECTIONSTRING = bouncemailcounter.Load().MongoUri
+	DB               = bouncemailcounter.Load().MongoDataBase
+	MailLogs         = bouncemailcounter.Load().MongoCollection
 )
 
 type MailLog struct {

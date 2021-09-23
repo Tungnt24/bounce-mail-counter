@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	bouncemailcounter "github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter"
 )
 
 func SendTele(message []byte) []byte {
-	tele_api := "https://api.telegram.org/bot{}/sendMessage"
+	cfg := bouncemailcounter.Load()
+	tele_api := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", cfg.TelegramBotToken)
 	resp, err := http.Post(tele_api, "application/json", bytes.NewBuffer(message))
 	if err != nil {
 		fmt.Print(err)

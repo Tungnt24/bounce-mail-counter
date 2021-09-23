@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/Shopify/sarama"
+	bouncemailcounter "github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter"
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/utils"
 )
 
@@ -55,13 +56,14 @@ func ConnectConsumer(brokersUrl []string, groupId string) (sarama.ConsumerGroup,
 }
 
 func Worker() {
+	cfg := bouncemailcounter.Load()
 	consumer := Consumer{
 		ready: make(chan bool),
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	broker := []string{""}
-	topics := ""
-	group_id := ""
+	broker := cfg.KafkaBroker
+	topics := cfg.KafkaTopic
+	group_id := cfg.KafkaConsumerGroup
 	client, err := ConnectConsumer(broker, group_id)
 	if err != nil {
 		panic(err)
@@ -75,7 +77,6 @@ func Worker() {
 			if err := client.Consume(ctx, strings.Split(topics, ","), &consumer); err != nil {
 				log.Panicf("Error from consumer: %v", err)
 			}
-			// check if context was cancelled, signaling that the consumer should stop
 			if ctx.Err() != nil {
 				return
 			}
@@ -83,7 +84,7 @@ func Worker() {
 		}
 	}()
 
-	<-consumer.ready // Await till the consumer has been set up
+	<-consumer.ready
 	log.Println("Sarama consumer up and running!...")
 
 	sigterm := make(chan os.Signal, 1)

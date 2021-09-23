@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	bouncemailcounter "github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter"
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/client"
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/utils"
 	"github.com/jasonlvhit/gocron"
@@ -15,6 +16,7 @@ type sendMessageReqBody struct {
 }
 
 func Task(duration int) {
+	cfg := bouncemailcounter.Load()
 	message := `
 		Counter_Time: %v
 		per_minute: %d
@@ -22,7 +24,7 @@ func Task(duration int) {
 	time_from, counter := utils.Counter(duration)
 	message = fmt.Sprintf(message, time_from, counter)
 	req_body := &sendMessageReqBody{
-		ChatID: 932131897,
+		ChatID: cfg.TelegramChatId,
 		Text:   message,
 	}
 	req_bytes, err := json.Marshal(req_body)
@@ -35,8 +37,6 @@ func Task(duration int) {
 }
 
 func main() {
-	gocron.Every(1).Minute().Do(Task, 1)
-	//gocron.Every(1).Hour().Do(Task, 60)
-	//gocron.Every(1).Day().Do(Task, 24)
+	gocron.Every(1).Second().Do(Task, 1)
 	<-gocron.Start()
 }

@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -48,11 +47,6 @@ func CollectField(raw_message_str string) (client.MailLog, error) {
 	mapping := Dump(raw_message_str)
 	raw_message := fmt.Sprintf("%v\n", mapping["message"])
 	fmt.Println("\nMESSAGE: ", raw_message)
-	f, err := os.OpenFile("log.txt", os.O_APPEND|os.O_WRONLY, 0644)
-	fmt.Fprintln(f, raw_message)
-	if err != nil {
-		panic(err)
-	}
 	timestamp := fmt.Sprintf("%v\n", mapping["@timestamp"])
 	index := strings.Index(raw_message, "]:")
 	status_message_index := strings.Index(raw_message, "(")
@@ -141,7 +135,6 @@ func GetTime(duration int) (time.Time, time.Time) {
 func Counter(duration int) (time.Time, int) {
 	from, to := GetTime(duration)
 	counter := 0
-	from, to = ConvertToTimeUTC("2021-09-16T18:48:00Z"), ConvertToTimeUTC("2021-09-16T21:35:50Z")
 	result := GetBounceMail(from, to)
 	for _, value := range result {
 		is_spam := DetectSpam(value.Message)
