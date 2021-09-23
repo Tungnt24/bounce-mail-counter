@@ -37,6 +37,6 @@ func Task(duration int) {
 }
 
 func main() {
-	gocron.Every(1).Second().Do(Task, 1)
+	gocron.Every(1).Minute().Do(Task, 1)
 	<-gocron.Start()
 }
