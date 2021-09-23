@@ -29,7 +29,7 @@ func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for raw_message := range claim.Messages() {
 		raw_message_str := string(raw_message.Value)
-		is_legal_message := utils.FilterMessage(raw_message_str)
+		is_legal_message := utils.FilterLog(raw_message_str)
 		if is_legal_message {
 			log, _ := utils.CollectField(raw_message_str)
 			utils.AggregateLog(log)
