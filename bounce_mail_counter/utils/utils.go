@@ -112,6 +112,7 @@ func AggregateLog(mail_log client.MailLog) {
 
 func DetectSpam(message string) bool {
 	spam_pattern := `^.*(\breputation\b|\bspam\b|\bspamhaus\b|\blisted\b|\bblock\b|\bblocked\b|\bsecurity\b|\bblacklisted\b|\bphish\b|\bphishing\b|\bvirus\b|\brejected\b|\bblacklisted\b|\bblacklist\b).*($|[^\w])`
+	message = strings.ToLower(message)
 	match, _ := regexp.MatchString(spam_pattern, message)
 	return match
 }
