@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/client"
+	"github.com/sirupsen/logrus"
 )
 
 func FilterLog(message string) bool {
@@ -43,10 +44,10 @@ func ConvertToTimeUTC(time_str string) time.Time {
 }
 
 func CollectField(raw_message_str string) (client.MailLog, error) {
-	log := client.MailLog{}
+	mail_log := client.MailLog{}
 	mapping := Dump(raw_message_str)
 	raw_message := fmt.Sprintf("%v\n", mapping["message"])
-	fmt.Println("\nMESSAGE: ", raw_message)
+	logrus.Info("Message: %s", raw_message)
 	timestamp := fmt.Sprintf("%v\n", mapping["@timestamp"])
 	index := strings.Index(raw_message, "]:")
 	status_message_index := strings.Index(raw_message, "(")
@@ -67,34 +68,34 @@ func CollectField(raw_message_str string) (client.MailLog, error) {
 		value := strings.Replace(raw_value, ",", " ", 1)
 		switch key {
 		case "From":
-			log.From = value
+			mail_log.From = value
 		case "To":
-			log.To = value
+			mail_log.To = value
 		case "Message-Id":
-			log.Message_Id = value
+			mail_log.Message_Id = value
 		case "Relay":
 			open_char := strings.Index(value, "[")
 			close_char := strings.Index(value, "]")
 			if open_char == -1 || close_char == -1 {
 				continue
 			}
-			log.Recipient_Smtp_Domain = value[:open_char]
-			log.Recipient_Smtp_Ip = value[open_char+1 : close_char]
+			mail_log.Recipient_Smtp_Domain = value[:open_char]
+			mail_log.Recipient_Smtp_Ip = value[open_char+1 : close_char]
 		case "Status":
-			log.Sent_At = ConvertToTimeUTC(strings.Trim(timestamp, "\n"))
+			mail_log.Sent_At = ConvertToTimeUTC(strings.Trim(timestamp, "\n"))
 			status_message := raw_message[status_message_index:]
-			log.Status = value
-			log.Message = status_message
+			mail_log.Status = value
+			mail_log.Message = status_message
 		}
 	}
-	log.Queue_Id = queue_id
-	return log, nil
+	mail_log.Queue_Id = queue_id
+	return mail_log, nil
 }
 
-func AggregateLog(log client.MailLog) {
-	v := reflect.ValueOf(log)
+func AggregateLog(mail_log client.MailLog) {
+	v := reflect.ValueOf(mail_log)
 	typeOfS := v.Type()
-	result, _ := client.GetLogByQueueId(log.Queue_Id)
+	result, _ := client.GetLogByQueueId(mail_log.Queue_Id)
 	if result != (client.MailLog{}) {
 		for i := 1; i < v.NumField(); i++ {
 			key := strings.ToLower(typeOfS.Field(i).Name)
@@ -102,10 +103,10 @@ func AggregateLog(log client.MailLog) {
 			if value == "" || value == "0001-01-01 00:00:00 +0000 UTC" {
 				continue
 			}
-			client.UpdateLog(log.Queue_Id, key, value)
+			client.UpdateLog(mail_log.Queue_Id, key, value)
 		}
 	} else {
-		client.CreateLog(log)
+		client.CreateLog(mail_log)
 	}
 }
 
