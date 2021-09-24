@@ -76,33 +76,33 @@ func GetManyLogs(key string, value string, from_date time.Time, to_date time.Tim
 		},
 		key: value,
 	}
-	logs := []MailLog{}
+	mail_log := []MailLog{}
 
 	client, err := GetMongoClient()
 	if err != nil {
-		return logs, err
+		return mail_log, err
 	}
 	collection := client.Database(DB).Collection(MailLogs)
 
 	cur, err := collection.Find(context.TODO(), filter)
 	if err != nil {
-		return logs, err
+		return mail_log, err
 	}
 
 	for cur.Next(context.TODO()) {
 		t := MailLog{}
 		err := cur.Decode(&t)
 		if err != nil {
-			return logs, err
+			return mail_log, err
 		}
-		logs = append(logs, t)
+		mail_log = append(mail_log, t)
 	}
 
 	cur.Close(context.TODO())
-	if len(logs) == 0 {
-		return logs, mongo.ErrNoDocuments
+	if len(mail_log) == 0 {
+		return mail_log, mongo.ErrNoDocuments
 	}
-	return logs, nil
+	return mail_log, nil
 }
 
 func UpdateLog(queue_id string, key string, value string) error {
