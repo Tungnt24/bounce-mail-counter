@@ -8,6 +8,7 @@ import (
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/client"
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/utils"
 	"github.com/jasonlvhit/gocron"
+	"github.com/sirupsen/logrus"
 )
 
 type sendMessageReqBody struct {
@@ -23,20 +24,24 @@ func Task(duration int) {
 	`
 	time_from, counter := utils.Counter(duration)
 	message = fmt.Sprintf(message, time_from, counter)
+	logrus.Info(message)
 	req_body := &sendMessageReqBody{
 		ChatID: cfg.TelegramChatId,
 		Text:   message,
 	}
 	req_bytes, err := json.Marshal(req_body)
 	if err != nil {
-		fmt.Print(err)
+		logrus.Error(err)
 	}
 	if counter > 10 {
+		logrus.Info("Sending to telegram.....")
 		client.SendTele(req_bytes)
+		logrus.Info("Done")
 	}
 }
 
 func main() {
-	gocron.Every(1).Minute().Do(Task, 1)
+	utils.InitLog()
+	gocron.Every(1).Second().Do(Task, 1)
 	<-gocron.Start()
 }

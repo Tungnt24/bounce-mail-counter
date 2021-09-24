@@ -12,6 +12,7 @@ import (
 	"github.com/Shopify/sarama"
 	bouncemailcounter "github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter"
 	"github.com/Tungnt24/bounce-mail-counter/bounce_mail_counter/utils"
+	"github.com/sirupsen/logrus"
 )
 
 type Consumer struct {
@@ -42,15 +43,15 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 }
 
 func ConnectConsumer(brokersUrl []string, groupId string) (sarama.ConsumerGroup, error) {
-	log.Println("Starting a new Sarama consumer")
-	sarama.Logger = log.New(os.Stdout, "[mail_counter] ", log.LstdFlags)
+	logrus.Info("Starting a new Sarama consumer")
+	sarama.Logger = log.New(os.Stdout, "[bounce_mail] ", log.LstdFlags)
 
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRange
 	client, err := sarama.NewConsumerGroup(brokersUrl, groupId, config)
 	if err != nil {
-		log.Panicf("Error creating consumer group client: %v", err)
+		logrus.Error("Error creating consumer group client: %v", err)
 	}
 	return client, nil
 }
@@ -75,7 +76,7 @@ func Worker() {
 		defer wg.Done()
 		for {
 			if err := client.Consume(ctx, strings.Split(topics, ","), &consumer); err != nil {
-				log.Panicf("Error from consumer: %v", err)
+				logrus.Error("Error from consumer: %v", err)
 			}
 			if ctx.Err() != nil {
 				return
@@ -85,23 +86,24 @@ func Worker() {
 	}()
 
 	<-consumer.ready
-	log.Println("Sarama consumer up and running!...")
+	logrus.Info("Sarama consumer up and running!...")
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-ctx.Done():
-		log.Println("terminating: context cancelled")
+		logrus.Info("terminating: context cancelled")
 	case <-sigterm:
-		log.Println("terminating: via signal")
+		logrus.Info("terminating: via signal")
 	}
 	cancel()
 	wg.Wait()
 	if err = client.Close(); err != nil {
-		log.Panicf("Error closing client: %v", err)
+		logrus.Error("Error closing client: %v", err)
 	}
 }
 
 func main() {
+	utils.InitLog()
 	Worker()
 }
