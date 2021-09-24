@@ -70,8 +70,11 @@ func CreateLog(task MailLog) error {
 
 func GetManyLogs(key string, value string, from_date time.Time, to_date time.Time) ([]MailLog, error) {
 	filter := bson.M{
-		"sent_at": bson.M{"$gte": primitive.NewDateTimeFromTime(from_date), "$lt": primitive.NewDateTimeFromTime(to_date)},
-		key:       value,
+		"sent_at": bson.M{
+			"$gte": primitive.NewDateTimeFromTime(from_date),
+			"$lt":  primitive.NewDateTimeFromTime(to_date),
+		},
+		key: value,
 	}
 	logs := []MailLog{}
 
@@ -79,7 +82,6 @@ func GetManyLogs(key string, value string, from_date time.Time, to_date time.Tim
 	if err != nil {
 		return logs, err
 	}
-
 	collection := client.Database(DB).Collection(MailLogs)
 
 	cur, err := collection.Find(context.TODO(), filter)
