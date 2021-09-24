@@ -47,7 +47,7 @@ func CollectField(raw_message_str string) (client.MailLog, error) {
 	mail_log := client.MailLog{}
 	mapping := Dump(raw_message_str)
 	raw_message := fmt.Sprintf("%v\n", mapping["message"])
-	logrus.Info("Message: %s", raw_message)
+	logrus.Info("Message: ", raw_message)
 	timestamp := fmt.Sprintf("%v\n", mapping["@timestamp"])
 	index := strings.Index(raw_message, "]:")
 	status_message_index := strings.Index(raw_message, "(")
